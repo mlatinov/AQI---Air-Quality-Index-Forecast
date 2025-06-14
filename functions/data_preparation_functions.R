@@ -47,17 +47,17 @@ data_prep <- function(data){
     # Add lags
     tk_augment_lags(
       .value = aqi_value,
-      .lags = c(7,14,21),
-      .names = c("lag_7","lag_14","lag_21")
+      .lags = c(5,10,15),
+      .names = c("lag_5","lag_10","lag_15")
     )%>%
     
     # Add Rolling Features
     tk_augment_slidify(
       .value = aqi_value,
-      .period = c(10,30,60,90),
+      .period = c(5,10,15,20),
       .f = mean,
       .partial = TRUE,
-      .names = c("MA_10","MA_30","MA_60","MA_90")
+      .names = c("MA_5","MA_10","MA_15","MA_20")
     ) %>%
     
     # Add holiday features
@@ -71,7 +71,7 @@ data_prep <- function(data){
 }
 
 #### Data Extension Function ####
-extend_data <- function(data,horizon = "3 months"){
+extend_data <- function(data,horizon = "1 month"){
   
   data %>%
     distinct() %>%
@@ -85,11 +85,21 @@ extend_data <- function(data,horizon = "3 months"){
 }
 
 ##### Split Function ####
-split_grouped_ts_data <- function(data ,horizon){
+split_grouped_ts_data <- function(data ,horizon = "1 month"){
   
+  data <- ungroup(data)
+
+  splits <- time_series_split(
+    data =  data,
+    date_var = date,
+    cumulative = TRUE, 
+    assess = horizon
+    )  
   
-  
-  
+  tibble(
+    tar_group = data$tar_group %>% unique(),
+    split = list(splits)
+  )
   
 }
 
